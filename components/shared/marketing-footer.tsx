@@ -1,23 +1,57 @@
 import Link from "next/link";
+import { Logo } from "./logo";
+
+const COLUMNS = [
+  {
+    heading: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Services", href: "/services" },
+      { label: "Industries", href: "/industries" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    heading: "Get started",
+    links: [
+      { label: "Ship freight", href: "/shippers/signup" },
+      { label: "Haul freight", href: "/carriers/signup" },
+      { label: "Sign in", href: "/login" },
+    ],
+  },
+];
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t bg-muted/20">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <div>© {new Date().getFullYear()} BluePeakDispatch. All rights reserved.</div>
-        <div className="flex gap-4">
-          <Link href="/about" className="hover:text-foreground">
-            About
-          </Link>
-          <Link href="/services" className="hover:text-foreground">
-            Services
-          </Link>
-          <Link href="/industries" className="hover:text-foreground">
-            Industries
-          </Link>
-          <Link href="/contact" className="hover:text-foreground">
-            Contact
-          </Link>
+    <footer className="border-t border-brand-navy-800 bg-brand-navy-950">
+      <div className="mx-auto max-w-7xl px-6 py-16">
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-[2fr_1fr_1fr]">
+          <div>
+            <Logo variant="light" />
+            <p className="mt-4 max-w-xs text-sm text-white/60">
+              A full-service freight brokerage connecting shippers with vetted carriers across
+              full truckload, LTL, and specialized equipment.
+            </p>
+          </div>
+          {COLUMNS.map((col) => (
+            <div key={col.heading}>
+              <div className="text-xs font-medium tracking-wide text-white/50 uppercase">
+                {col.heading}
+              </div>
+              <ul className="mt-4 space-y-3">
+                {col.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm text-white/70 hover:text-brand-gold-400">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-16 border-t border-brand-navy-800 pt-8 text-sm text-white/40">
+          © {new Date().getFullYear()} BluePeakDispatch. All rights reserved.
         </div>
       </div>
     </footer>

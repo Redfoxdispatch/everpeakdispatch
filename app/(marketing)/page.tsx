@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HeroReveal, Reveal, RevealGroup, RevealItem } from "@/components/shared/motion";
+import { MARKETING_IMAGES } from "@/lib/marketing/images";
 
 const VALUE_PROPS = [
   {
@@ -28,77 +30,186 @@ const TRUST_SIGNALS = [
 export default function HomePage() {
   return (
     <div>
-      <section className="mx-auto max-w-6xl px-6 py-24 text-center">
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-          Freight moved right, every time.
-        </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-          BluePeakDispatch is a full-service freight brokerage connecting shippers with vetted
-          carriers across full truckload, LTL, and specialized equipment.
-        </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button size="lg" render={<Link href="/shippers/signup" />} nativeButton={false}>
-            Ship freight
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            render={<Link href="/carriers/signup" />}
-            nativeButton={false}
-          >
-            Haul freight
-          </Button>
+      {/* Hero — full-bleed port photography, navy duotone scrim, fixed nav overlays transparently at top. */}
+      <section className="relative flex min-h-[92vh] items-center overflow-hidden bg-brand-navy-950">
+        <Image
+          src={MARKETING_IMAGES.portAtNight.url(2400)}
+          alt={MARKETING_IMAGES.portAtNight.alt}
+          fill
+          priority
+          className="object-cover [filter:contrast(1.05)_saturate(0.9)]"
+        />
+        {/* Duotone scrim — see context/design.md §6. The one sanctioned gradient in the system: over a photo, never decorative-alone. */}
+        <div className="absolute inset-0 bg-linear-to-t from-brand-navy-950 via-brand-navy-950/70 to-brand-navy-950/20" />
+        <div className="absolute inset-0 bg-linear-to-r from-brand-navy-950/95 via-brand-navy-950/40 to-transparent" />
+
+        <div className="relative mx-auto w-full max-w-7xl px-6 py-32">
+          <div className="max-w-2xl">
+            <HeroReveal>
+              <span className="text-xs font-medium tracking-[0.15em] text-brand-gold-400 uppercase">
+                Global freight brokerage
+              </span>
+            </HeroReveal>
+            <HeroReveal delay={0.1}>
+              <h1 className="mt-4 text-[clamp(2.75rem,5.5vw,4.75rem)] leading-[1.05] font-bold text-white">
+                Freight moved right, every time.
+              </h1>
+            </HeroReveal>
+            <HeroReveal delay={0.2}>
+              <p className="mt-6 max-w-lg text-lg text-white/70">
+                A full-service freight brokerage connecting shippers with vetted carriers across
+                full truckload, LTL, and specialized equipment — run on precision, not phone
+                tag.
+              </p>
+            </HeroReveal>
+            <HeroReveal delay={0.3}>
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" render={<Link href="/shippers/signup" />} nativeButton={false}>
+                  Ship freight
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                  render={<Link href="/carriers/signup" />}
+                  nativeButton={false}
+                >
+                  Haul freight
+                </Button>
+              </div>
+            </HeroReveal>
+          </div>
         </div>
       </section>
 
-      <section className="border-y bg-muted/20">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-12 sm:grid-cols-3">
-          {TRUST_SIGNALS.map((signal) => (
-            <div key={signal.label} className="text-center">
-              <div className="text-3xl font-semibold">{signal.value}</div>
-              <div className="mt-1 text-sm text-muted-foreground">{signal.label}</div>
+      {/* Trust signals — deliberately asymmetric: the lead stat is larger than its siblings. */}
+      <section className="border-b border-brand-navy-100 bg-white">
+        <RevealGroup className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-16 sm:grid-cols-[1.4fr_1fr_1fr]">
+          <RevealItem className="border-b border-brand-navy-100 pb-8 sm:border-b-0 sm:border-r sm:pr-10 sm:pb-0">
+            <div className="font-heading text-6xl font-bold text-brand-gold-600">
+              {TRUST_SIGNALS[0].value}
             </div>
+            <div className="mt-2 text-muted-foreground">{TRUST_SIGNALS[0].label}</div>
+          </RevealItem>
+          {TRUST_SIGNALS.slice(1).map((signal) => (
+            <RevealItem key={signal.label}>
+              <div className="font-heading text-4xl font-semibold text-brand-ink">{signal.value}</div>
+              <div className="mt-2 text-muted-foreground">{signal.label}</div>
+            </RevealItem>
           ))}
+        </RevealGroup>
+      </section>
+
+      {/* Value props — asymmetric split: warehouse photography + a stacked list, not a 3-up card grid. */}
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-16 px-6 py-28 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+          <Reveal>
+            <div className="relative aspect-4/5 overflow-hidden rounded-lg lg:aspect-auto lg:h-[560px]">
+              <Image
+                src={MARKETING_IMAGES.warehouseInterior.url(1400)}
+                alt={MARKETING_IMAGES.warehouseInterior.alt}
+                fill
+                className="object-cover [filter:contrast(1.05)_saturate(0.9)]"
+              />
+            </div>
+          </Reveal>
+          <div>
+            <Reveal>
+              <span className="text-xs font-medium tracking-[0.15em] text-brand-gold-600 uppercase">
+                Why shippers work with us
+              </span>
+              <h2 className="mt-3 max-w-md text-4xl font-semibold text-brand-ink">
+                Built for shippers who&apos;ve outgrown the call center.
+              </h2>
+            </Reveal>
+            <RevealGroup className="mt-10 space-y-8">
+              {VALUE_PROPS.map((prop) => (
+                <RevealItem key={prop.title} className="border-l-2 border-brand-gold-500 pl-6">
+                  <h3 className="text-lg font-semibold text-brand-ink">{prop.title}</h3>
+                  <p className="mt-1.5 text-muted-foreground">{prop.description}</p>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <h2 className="text-center text-2xl font-semibold tracking-tight">
-          Why shippers work with us
-        </h2>
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {VALUE_PROPS.map((prop) => (
-            <Card key={prop.title}>
-              <CardHeader>
-                <CardTitle>{prop.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                {prop.description}
-              </CardContent>
-            </Card>
-          ))}
+      {/* Full-bleed network motif break. */}
+      <section className="relative h-[420px] overflow-hidden bg-brand-navy-950">
+        <Image
+          src={MARKETING_IMAGES.highwayInterchange.url(2000)}
+          alt={MARKETING_IMAGES.highwayInterchange.alt}
+          fill
+          className="object-cover opacity-80 [filter:contrast(1.05)_saturate(0.9)]"
+        />
+        <div className="absolute inset-0 bg-linear-to-r from-brand-navy-950/90 via-brand-navy-950/30 to-brand-navy-950/70" />
+        <div className="relative mx-auto flex h-full max-w-6xl items-center px-6">
+          <Reveal className="max-w-md">
+            <p className="text-2xl leading-snug font-medium text-white">
+              &ldquo;Every lane, every load, tracked from pickup to delivery — no black box.&rdquo;
+            </p>
+            <p className="mt-4 text-sm text-white/60">The BluePeakDispatch operations desk</p>
+          </Reveal>
         </div>
       </section>
 
-      <section className="border-t bg-muted/20">
-        <div className="mx-auto max-w-6xl px-6 py-16 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Ready to move freight?</h2>
-          <p className="mt-2 text-muted-foreground">
+      {/* Global reach — 60/40 split, bridge photography. */}
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-16 px-6 py-28 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+          <div>
+            <Reveal>
+              <span className="text-xs font-medium tracking-[0.15em] text-brand-gold-600 uppercase">
+                Coast to coast
+              </span>
+              <h2 className="mt-3 max-w-md text-4xl font-semibold text-brand-ink">
+                Coverage across every major freight corridor.
+              </h2>
+              <p className="mt-5 max-w-md text-muted-foreground">
+                From regional lanes to long-haul cross-country freight, our carrier network
+                covers the corridors that matter to your business — with a dispatcher who knows
+                every one of them by name.
+              </p>
+              <div className="mt-8">
+                <Button render={<Link href="/services" />} nativeButton={false}>
+                  Explore our services
+                </Button>
+              </div>
+            </Reveal>
+          </div>
+          <Reveal delay={0.1}>
+            <div className="relative aspect-4/5 overflow-hidden rounded-lg lg:aspect-auto lg:h-[560px]">
+              <Image
+                src={MARKETING_IMAGES.bridgeAtDusk.url(1400)}
+                alt={MARKETING_IMAGES.bridgeAtDusk.alt}
+                fill
+                className="object-cover [filter:contrast(1.05)_saturate(0.9)]"
+              />
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Final CTA — navy, gold action. */}
+      <section className="border-t border-brand-navy-800 bg-brand-navy-950">
+        <Reveal className="mx-auto max-w-6xl px-6 py-24 text-center">
+          <h2 className="text-4xl font-semibold text-white">Ready to move freight?</h2>
+          <p className="mx-auto mt-3 max-w-md text-white/60">
             Get a quote in minutes, or join our carrier network to see available loads.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button render={<Link href="/shippers/signup" />} nativeButton={false}>
               Get a quote
             </Button>
             <Button
               variant="outline"
+              className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
               render={<Link href="/carriers/signup" />}
               nativeButton={false}
             >
               Join our carrier network
             </Button>
           </div>
-        </div>
+        </Reveal>
       </section>
     </div>
   );
