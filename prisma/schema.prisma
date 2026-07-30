@@ -1,0 +1,684 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// Identity & access
+// ─────────────────────────────────────────────────────────────
+
+enum ProfileStatus {
+  invited
+  active
+  suspended
+}
+
+/// Extends Supabase auth.users 1:1. id is NOT defaulted here — it is set
+/// equal to auth.users.id by the handle_new_user() trigger (raw SQL migration).
+model Profile {
+  id          String        @id @db.Uuid
+  companyId   String        @map("company_id") @db.Uuid
+  roleId      String        @map("role_id") @db.Uuid
+  fullName    String        @map("full_name")
+  phone       String?
+  avatarUrl   String?       @map("avatar_url")
+  status      ProfileStatus @default(invited)
+  lastLoginAt DateTime?     @map("last_login_at") @db.Timestamptz(6)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  company Company @relation(fields: [companyId], references: [id])
+  role    Role    @relation(fields: [roleId], references: [id])
+
+  createdLoads       Load[]              @relation("LoadCreatedBy")
+  createdQuotes      Quote[]             @relation("QuoteCreatedBy")
+  bookedBookings     Booking[]           @relation("BookingBookedBy")
+  offeredAssignments CarrierAssignment[] @relation("AssignmentOfferedBy")
+  uploadedDocuments  Document[]          @relation("DocumentUploadedBy")
+  trackingEvents     TrackingEvent[]     @relation("TrackingEventCreatedBy")
+  sentMessages       Message[]           @relation("MessageSender")
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+  driverRecord       Driver?
+
+  @@index([companyId])
+  @@index([roleId])
+  @@index([status])
+  @@map("profiles")
+}
+
+model Role {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @unique
+  isSystemRole Boolean  @default(true) @map("is_system_role")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  profiles        Profile[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  resource    String
+  action      String
+  scope       String?
+  description String?
+
+  rolePermissions RolePermission[]
+
+  @@unique([resource, action, scope])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Companies & profiles
+// ─────────────────────────────────────────────────────────────
+
+enum CompanyType {
+  internal
+  shipper
+  carrier
+}
+
+enum CompanyStatus {
+  /// Self-registered via the public marketing site, awaiting brokerage_admin
+  /// review (MC/DOT/insurance check for carriers, credit check for shippers)
+  /// — see context/01-business-workflow.md §4.9 and 05-ui-ux-planning.md.
+  pending
+  active
+  suspended
+  archived
+}
+
+model Company {
+  id             String        @id @default(uuid()) @db.Uuid
+  type           CompanyType
+  legalName      String        @map("legal_name")
+  dbaName        String?       @map("dba_name")
+  billingAddress Json?         @map("billing_address") @db.JsonB
+  phone          String?
+  status         CompanyStatus @default(active)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  profiles           Profile[]
+  shipperProfile     ShipperProfile?
+  carrierProfile     CarrierProfile?
+  drivers            Driver[]
+  vehicles           Vehicle[]
+  shipperLoads       Load[]              @relation("LoadShipperCompany")
+  carrierAssignments CarrierAssignment[] @relation("AssignmentCarrierCompany")
+  documents          Document[]          @relation("DocumentOwnerCompany")
+  invoices           Invoice[]
+
+  @@index([type])
+  @@index([status])
+  @@map("companies")
+}
+
+model ShipperProfile {
+  companyId        String   @id @map("company_id") @db.Uuid
+  industry         String?
+  taxId            String?  @map("tax_id")
+  creditLimit      Decimal? @map("credit_limit") @db.Decimal(12, 2)
+  paymentTermsDays Int      @default(30) @map("payment_terms_days")
+  creditHold       Boolean  @default(false) @map("credit_hold")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("shipper_profiles")
+}
+
+enum AuthorityType {
+  common
+  contract
+  broker
+}
+
+enum AuthorityStatus {
+  active
+  inactive
+  revoked
+  pending
+}
+
+enum SafetyRating {
+  satisfactory
+  conditional
+  unsatisfactory
+  not_rated
+}
+
+model CarrierProfile {
+  companyId               String          @id @map("company_id") @db.Uuid
+  mcNumber                String          @unique @map("mc_number")
+  dotNumber               String          @unique @map("dot_number")
+  scacCode                String?         @map("scac_code")
+  authorityType           AuthorityType   @map("authority_type")
+  authorityStatus         AuthorityStatus @default(pending) @map("authority_status")
+  insuranceProvider       String?         @map("insurance_provider")
+  insurancePolicyNumber   String?         @map("insurance_policy_number")
+  insuranceExpiryDate     DateTime        @map("insurance_expiry_date") @db.Date
+  safetyRating            SafetyRating    @default(not_rated) @map("safety_rating")
+  equipmentTypes          String[]        @map("equipment_types")
+  factoringCompanyName    String?         @map("factoring_company_name")
+  factoringCompanyRemitTo Json?           @map("factoring_company_remit_to") @db.JsonB
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([authorityStatus, insuranceExpiryDate])
+  @@map("carrier_profiles")
+}
+
+enum DriverStatus {
+  active
+  inactive
+}
+
+model Driver {
+  id            String       @id @default(uuid()) @db.Uuid
+  carrierId     String       @map("carrier_id") @db.Uuid
+  userId        String?      @unique @map("user_id") @db.Uuid
+  fullName      String       @map("full_name")
+  phone         String?
+  licenseNumber String?      @map("license_number")
+  licenseExpiry DateTime?    @map("license_expiry") @db.Date
+  status        DriverStatus @default(active)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  carrier            Company             @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  user               Profile?            @relation(fields: [userId], references: [id])
+  carrierAssignments CarrierAssignment[]
+
+  @@index([carrierId])
+  @@map("drivers")
+}
+
+enum VehicleStatus {
+  active
+  maintenance
+  inactive
+}
+
+model Vehicle {
+  id                String        @id @default(uuid()) @db.Uuid
+  carrierId         String        @map("carrier_id") @db.Uuid
+  equipmentType     String        @map("equipment_type")
+  vin               String?
+  plateNumber       String?       @map("plate_number")
+  capacityWeightLbs Int?          @map("capacity_weight_lbs")
+  status            VehicleStatus @default(active)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  carrier            Company             @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  equipment          EquipmentType       @relation(fields: [equipmentType], references: [code])
+  carrierAssignments CarrierAssignment[]
+
+  @@index([carrierId])
+  @@index([equipmentType])
+  @@map("vehicles")
+}
+
+model EquipmentType {
+  code   String  @id
+  label  String
+  active Boolean @default(true)
+
+  vehicles Vehicle[]
+  loads    Load[]
+
+  @@map("equipment_types")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Core operational tables
+// ─────────────────────────────────────────────────────────────
+
+enum LoadMode {
+  ftl
+  ltl
+}
+
+enum LoadStatus {
+  draft
+  quote_requested
+  quoted
+  booked
+  carrier_sourcing
+  dispatched
+  at_pickup
+  picked_up
+  in_transit
+  at_delivery
+  delivered
+  completed
+  invoiced
+  paid
+  closed
+  cancelled
+  on_hold
+}
+
+model Load {
+  id                  String     @id @default(uuid()) @db.Uuid
+  loadNumber          String     @unique @map("load_number")
+  shipperCompanyId    String     @map("shipper_company_id") @db.Uuid
+  status              LoadStatus @default(draft)
+  mode                LoadMode
+  equipmentType       String     @map("equipment_type")
+  commodity           String
+  weightLbs           Int        @map("weight_lbs")
+  specialInstructions String?    @map("special_instructions")
+  acceptedQuoteId     String?    @unique @map("accepted_quote_id") @db.Uuid
+  createdBy           String     @map("created_by") @db.Uuid
+  cancelledReason     String?    @map("cancelled_reason")
+  cancelledAt         DateTime?  @map("cancelled_at") @db.Timestamptz(6)
+  deletedAt           DateTime?  @map("deleted_at") @db.Timestamptz(6)
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  shipperCompany Company       @relation("LoadShipperCompany", fields: [shipperCompanyId], references: [id])
+  equipment      EquipmentType @relation(fields: [equipmentType], references: [code])
+  creator        Profile       @relation("LoadCreatedBy", fields: [createdBy], references: [id])
+  acceptedQuote  Quote?        @relation("AcceptedQuote", fields: [acceptedQuoteId], references: [id])
+
+  stops              LoadStop[]
+  quotes             Quote[]             @relation("LoadQuotes")
+  booking            Booking?
+  carrierAssignments CarrierAssignment[]
+  documents          Document[]
+  invoices           Invoice[]
+  trackingEvents     TrackingEvent[]
+  conversations      Conversation[]
+
+  @@index([status])
+  @@index([shipperCompanyId])
+  @@index([createdAt])
+  @@map("loads")
+}
+
+enum StopType {
+  pickup
+  delivery
+}
+
+enum StopStatus {
+  pending
+  arrived
+  completed
+  exception
+}
+
+model LoadStop {
+  id                  String     @id @default(uuid()) @db.Uuid
+  loadId              String     @map("load_id") @db.Uuid
+  stopType            StopType   @map("stop_type")
+  sequence            Int        @db.SmallInt
+  address             Json       @db.JsonB
+  appointmentEarliest DateTime   @map("appointment_earliest") @db.Timestamptz(6)
+  appointmentLatest   DateTime   @map("appointment_latest") @db.Timestamptz(6)
+  actualArrival       DateTime?  @map("actual_arrival") @db.Timestamptz(6)
+  actualDeparture     DateTime?  @map("actual_departure") @db.Timestamptz(6)
+  status              StopStatus @default(pending)
+
+  load Load @relation(fields: [loadId], references: [id], onDelete: Cascade)
+
+  @@index([loadId, sequence])
+  @@map("load_stops")
+}
+
+enum QuoteStatus {
+  pending
+  accepted
+  rejected
+  countered
+  expired
+}
+
+model Quote {
+  id              String      @id @default(uuid()) @db.Uuid
+  loadId          String      @map("load_id") @db.Uuid
+  version         Int         @default(1)
+  previousQuoteId String?     @map("previous_quote_id") @db.Uuid
+  sellRate        Decimal     @map("sell_rate") @db.Decimal(12, 2)
+  currency        String      @default("USD") @db.Char(3)
+  validUntil      DateTime    @map("valid_until") @db.Timestamptz(6)
+  status          QuoteStatus @default(pending)
+  notes           String?
+  createdBy       String      @map("created_by") @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  load          Load    @relation("LoadQuotes", fields: [loadId], references: [id], onDelete: Cascade)
+  previousQuote Quote?  @relation("QuoteVersions", fields: [previousQuoteId], references: [id])
+  nextVersions  Quote[] @relation("QuoteVersions")
+  creator       Profile @relation("QuoteCreatedBy", fields: [createdBy], references: [id])
+
+  acceptedByLoad Load?    @relation("AcceptedQuote")
+  booking        Booking?
+
+  @@index([loadId, status])
+  @@index([validUntil])
+  @@map("quotes")
+}
+
+model Booking {
+  id            String   @id @default(uuid()) @db.Uuid
+  loadId        String   @unique @map("load_id") @db.Uuid
+  quoteId       String   @unique @map("quote_id") @db.Uuid
+  confirmedRate Decimal  @map("confirmed_rate") @db.Decimal(12, 2)
+  bookedBy      String   @map("booked_by") @db.Uuid
+  bookedAt      DateTime @default(now()) @map("booked_at") @db.Timestamptz(6)
+
+  load   Load    @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  quote  Quote   @relation(fields: [quoteId], references: [id])
+  booker Profile @relation("BookingBookedBy", fields: [bookedBy], references: [id])
+
+  @@map("bookings")
+}
+
+enum AssignmentStatus {
+  offered
+  accepted
+  declined
+  fell_off
+  cancelled
+}
+
+model CarrierAssignment {
+  id               String           @id @default(uuid()) @db.Uuid
+  loadId           String           @map("load_id") @db.Uuid
+  carrierCompanyId String           @map("carrier_company_id") @db.Uuid
+  carrierRate      Decimal          @map("carrier_rate") @db.Decimal(12, 2)
+  driverId         String?          @map("driver_id") @db.Uuid
+  vehicleId        String?          @map("vehicle_id") @db.Uuid
+  status           AssignmentStatus @default(offered)
+  offeredBy        String           @map("offered_by") @db.Uuid
+  offeredAt        DateTime         @default(now()) @map("offered_at") @db.Timestamptz(6)
+  respondedAt      DateTime?        @map("responded_at") @db.Timestamptz(6)
+  fellOffReason    String?          @map("fell_off_reason")
+
+  load           Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  carrierCompany Company  @relation("AssignmentCarrierCompany", fields: [carrierCompanyId], references: [id])
+  driver         Driver?  @relation(fields: [driverId], references: [id])
+  vehicle        Vehicle? @relation(fields: [vehicleId], references: [id])
+  offeredByUser  Profile  @relation("AssignmentOfferedBy", fields: [offeredBy], references: [id])
+
+  // A partial unique index enforcing only one `accepted` assignment per load
+  // is added via raw SQL in the migration (Prisma schema can't express a
+  // WHERE-scoped unique constraint here).
+  @@index([carrierCompanyId, status])
+  @@index([loadId, status])
+  @@map("carrier_assignments")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Documents, invoicing, payments
+// ─────────────────────────────────────────────────────────────
+
+enum DocumentType {
+  bol
+  pod
+  rate_confirmation
+  insurance_certificate
+  w9
+  invoice
+  other
+}
+
+enum DocumentVisibility {
+  internal
+  shipper
+  carrier
+  public
+}
+
+enum DocumentStatus {
+  pending_review
+  approved
+  rejected
+}
+
+model Document {
+  id             String             @id @default(uuid()) @db.Uuid
+  loadId         String?            @map("load_id") @db.Uuid
+  ownerCompanyId String?            @map("owner_company_id") @db.Uuid
+  documentType   DocumentType       @map("document_type")
+  filePath       String             @map("file_path")
+  visibility     DocumentVisibility
+  status         DocumentStatus     @default(pending_review)
+  rejectedReason String?            @map("rejected_reason")
+  uploadedBy     String             @map("uploaded_by") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  load         Load?    @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  ownerCompany Company? @relation("DocumentOwnerCompany", fields: [ownerCompanyId], references: [id], onDelete: Cascade)
+  uploader     Profile  @relation("DocumentUploadedBy", fields: [uploadedBy], references: [id])
+
+  @@index([loadId])
+  @@index([documentType, status])
+  @@map("documents")
+}
+
+enum InvoiceType {
+  shipper_invoice
+  carrier_settlement
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  partially_paid
+  paid
+  overdue
+  disputed
+  void
+}
+
+model Invoice {
+  id            String        @id @default(uuid()) @db.Uuid
+  loadId        String        @map("load_id") @db.Uuid
+  invoiceNumber String        @unique @map("invoice_number")
+  type          InvoiceType
+  companyId     String        @map("company_id") @db.Uuid
+  subtotal      Decimal       @db.Decimal(12, 2)
+  taxAmount     Decimal       @default(0) @map("tax_amount") @db.Decimal(12, 2)
+  totalAmount   Decimal       @map("total_amount") @db.Decimal(12, 2)
+  amountPaid    Decimal       @default(0) @map("amount_paid") @db.Decimal(12, 2)
+  dueDate       DateTime      @map("due_date") @db.Date
+  status        InvoiceStatus @default(draft)
+  disputeReason String?       @map("dispute_reason")
+  issuedAt      DateTime?     @map("issued_at") @db.Timestamptz(6)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  load      Load              @relation(fields: [loadId], references: [id])
+  company   Company           @relation(fields: [companyId], references: [id])
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+
+  @@index([companyId, status])
+  @@index([dueDate])
+  @@index([type])
+  @@map("invoices")
+}
+
+enum AccessorialType {
+  base_rate
+  detention
+  tonu
+  layover
+  lumper
+  redelivery
+  storage
+  other
+}
+
+model InvoiceLineItem {
+  id              String           @id @default(uuid()) @db.Uuid
+  invoiceId       String           @map("invoice_id") @db.Uuid
+  description     String
+  accessorialType AccessorialType? @map("accessorial_type")
+  amount          Decimal          @db.Decimal(12, 2)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_line_items")
+}
+
+enum PaymentMethod {
+  ach
+  card
+  check
+  wire
+  other
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  invoiceId      String        @map("invoice_id") @db.Uuid
+  amount         Decimal       @db.Decimal(12, 2)
+  method         PaymentMethod
+  status         PaymentStatus @default(pending)
+  transactionRef String?       @map("transaction_ref")
+  paidAt         DateTime?     @map("paid_at") @db.Timestamptz(6)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Tracking, communications, audit
+// ─────────────────────────────────────────────────────────────
+
+enum TrackingEventType {
+  status_change
+  location_update
+  exception
+  note
+}
+
+enum TrackingSource {
+  manual
+  driver_app
+  eld
+  api
+}
+
+model TrackingEvent {
+  id          String            @id @default(uuid()) @db.Uuid
+  loadId      String            @map("load_id") @db.Uuid
+  eventType   TrackingEventType @map("event_type")
+  status      String?
+  lat         Decimal?          @db.Decimal(9, 6)
+  lng         Decimal?          @db.Decimal(9, 6)
+  description String?
+  source      TrackingSource
+  createdBy   String?           @map("created_by") @db.Uuid
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  load    Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  creator Profile? @relation("TrackingEventCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([loadId, createdAt])
+  @@map("tracking_events")
+}
+
+enum ConversationType {
+  shipper_broker
+  carrier_broker
+  internal
+}
+
+model Conversation {
+  id        String           @id @default(uuid()) @db.Uuid
+  loadId    String?          @map("load_id") @db.Uuid
+  type      ConversationType
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  load     Load?     @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([loadId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  senderId       String    @map("sender_id") @db.Uuid
+  body           String
+  readAt         DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       Profile      @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+enum NotificationChannel {
+  in_app
+  email
+  sms
+}
+
+model Notification {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  type      String
+  title     String
+  body      String?
+  link      String?
+  channel   NotificationChannel @default(in_app)
+  readAt    DateTime?           @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id") @db.Uuid
+  before      Json?    @db.JsonB
+  after       Json?    @db.JsonB
+  ipAddress   String?  @map("ip_address") @db.Inet
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  actor Profile? @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
