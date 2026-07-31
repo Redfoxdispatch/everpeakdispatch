@@ -1,28 +1,39 @@
 "use client";
 
-import { motion, useReducedMotion, type Variants } from "motion/react";
+import { motion, type Variants } from "motion/react";
+import { useSafeReducedMotion } from "./use-safe-reduced-motion";
 
 const EASE: [number, number, number, number] = [0.21, 0.47, 0.32, 0.98];
 
-/** Scroll-triggered fade + rise for a single element. See context/design.md §7. */
+/**
+ * Scroll-triggered fade + rise for a single element. See context/design.md
+ * §7. `variant="image"` is a stronger entrance for image cards — scales up
+ * from 92% and rises from further below — used where a photo, not body
+ * copy, is the thing scrolling into view.
+ */
 export function Reveal({
   children,
   delay = 0,
   className,
+  variant = "default",
 }: {
   children: React.ReactNode;
   delay?: number;
   className?: string;
+  variant?: "default" | "image";
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useSafeReducedMotion();
+  const isImage = variant === "image";
 
   return (
     <motion.div
       className={className}
-      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
-      whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      initial={
+        reduceMotion ? { opacity: 0 } : isImage ? { opacity: 0, y: 72, scale: 0.92 } : { opacity: 0, y: 16 }
+      }
+      whileInView={reduceMotion ? { opacity: 1 } : isImage ? { opacity: 1, y: 0, scale: 1 } : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
-      transition={{ duration: 0.5, delay, ease: EASE }}
+      transition={{ duration: isImage ? 0.8 : 0.5, delay, ease: EASE }}
     >
       {children}
     </motion.div>
@@ -39,7 +50,7 @@ export function HeroReveal({
   delay?: number;
   className?: string;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useSafeReducedMotion();
 
   return (
     <motion.div
@@ -96,7 +107,7 @@ export function RevealItem({
   children: React.ReactNode;
   className?: string;
 }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useSafeReducedMotion();
 
   return (
     <motion.div className={className} variants={reduceMotion ? itemVariantsReduced : itemVariants}>

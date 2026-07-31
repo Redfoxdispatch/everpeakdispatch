@@ -1,5 +1,6 @@
 import { db } from "@/lib/db/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthSplitLayout } from "@/components/shared/auth-split-layout";
+import { MARKETING_IMAGES } from "@/lib/marketing/images";
 import { CarrierSignupForm } from "./signup-form";
 
 export default async function CarrierSignupPage() {
@@ -9,19 +10,18 @@ export default async function CarrierSignupPage() {
   });
 
   return (
-    <div className="mx-auto max-w-md px-6 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>Haul freight with BluePeakDispatch</CardTitle>
-          <CardDescription>
-            Tell us about your fleet. Our team verifies your authority and insurance before
-            granting portal access.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CarrierSignupForm equipmentTypes={equipmentTypes} />
-        </CardContent>
-      </Card>
-    </div>
+    <AuthSplitLayout
+      image={MARKETING_IMAGES.bridgeAtDusk.src}
+      alt={MARKETING_IMAGES.bridgeAtDusk.alt}
+      eyebrow="For carriers"
+      title="Real freight, real lanes, no games."
+      description="Tell us about your fleet. Our team verifies your authority and insurance before granting portal access."
+    >
+      <h1 className="text-2xl font-semibold text-brand-ink">Haul freight with BluePeakDispatch</h1>
+      <p className="mt-1.5 text-sm text-muted-foreground">Create your carrier account.</p>
+      <div className="mt-8">
+        <CarrierSignupForm equipmentTypes={equipmentTypes} />
+      </div>
+    </AuthSplitLayout>
   );
 }

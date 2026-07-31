@@ -154,3 +154,16 @@
     @apply font-heading text-brand-ink;
   }
 }
+
+/* Infinite marquee track — see components/shared/marquee.tsx. The track
+   renders its content twice back-to-back and translates by exactly -50%,
+   so the loop point is seamless (the second copy lines up perfectly with
+   where the first started). */
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

@@ -3,16 +3,18 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Magnetic } from "@/components/shared/magnetic";
+import { FloatingInput } from "@/components/shared/floating-field";
 import { signupCarrier, type CarrierSignupState } from "./actions";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "Submitting..." : "Create account"}
-    </Button>
+    <Magnetic className="block w-full">
+      <Button type="submit" className="w-full" size="lg" disabled={pending}>
+        {pending ? "Submitting..." : "Create account"}
+      </Button>
+    </Magnetic>
   );
 }
 
@@ -25,58 +27,50 @@ export function CarrierSignupForm({
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="companyName">Company name</Label>
-        <Input id="companyName" name="companyName" required />
-      </div>
+      <FloatingInput id="companyName" name="companyName" label="Company name" required />
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="mcNumber">MC number</Label>
-          <Input id="mcNumber" name="mcNumber" required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="dotNumber">DOT number</Label>
-          <Input id="dotNumber" name="dotNumber" required />
-        </div>
+        <FloatingInput id="mcNumber" name="mcNumber" label="MC number" required />
+        <FloatingInput id="dotNumber" name="dotNumber" label="DOT number" required />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="insuranceExpiryDate">Insurance expiry date</Label>
-        <Input id="insuranceExpiryDate" name="insuranceExpiryDate" type="date" required />
-      </div>
-      <div className="space-y-2">
-        <Label>Equipment types</Label>
-        <div className="grid grid-cols-2 gap-2">
+      <FloatingInput
+        id="insuranceExpiryDate"
+        name="insuranceExpiryDate"
+        type="date"
+        label="Insurance expiry date"
+        required
+      />
+      <div>
+        <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Equipment types
+        </span>
+        <div className="mt-2 flex flex-wrap gap-2">
           {equipmentTypes.map((eq) => (
-            <label key={eq.code} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="equipmentTypes" value={eq.code} className="size-4" />
-              {eq.label}
+            <label key={eq.code} className="group">
+              <input
+                type="checkbox"
+                name="equipmentTypes"
+                value={eq.code}
+                className="peer sr-only"
+              />
+              <span className="inline-block rounded-full border border-brand-navy-100 px-3.5 py-1.5 text-sm text-brand-ink transition-colors peer-checked:border-brand-gold-500 peer-checked:bg-brand-gold-500 peer-checked:text-brand-navy-950 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-gold-500/50">
+                {eq.label}
+              </span>
             </label>
           ))}
         </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Your name</Label>
-        <Input id="fullName" name="fullName" required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone (optional)</Label>
-        <Input id="phone" name="phone" type="tel" autoComplete="tel" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
-      </div>
+      <FloatingInput id="fullName" name="fullName" label="Your name" required />
+      <FloatingInput id="email" name="email" type="email" autoComplete="email" label="Email" required />
+      <FloatingInput id="phone" name="phone" type="tel" autoComplete="tel" label="Phone (optional)" />
+      <FloatingInput
+        id="password"
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        minLength={8}
+        label="Password"
+        required
+      />
       {state.error ? (
         <p role="alert" className="text-sm text-destructive">
           {state.error}
