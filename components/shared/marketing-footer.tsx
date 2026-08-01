@@ -52,7 +52,7 @@ export function MarketingFooter() {
           ))}
         </div>
         <div className="mt-16 border-t border-brand-navy-800 pt-8 text-sm text-white/40">
-          © {new Date().getFullYear()} BluePeakDispatch. All rights reserved.
+          © {new Date().getFullYear()} EverPeakDispatch. All rights reserved.
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export function MarketingFooter() {
           horizontally too. */}
       <div className="overflow-hidden" aria-hidden="true">
         <div className="translate-y-[30%] text-center font-heading text-[clamp(2.5rem,11vw,12rem)] leading-none font-bold whitespace-nowrap text-brand-navy-800/50 select-none">
-          BluePeakDispatch
+          EverPeakDispatch
         </div>
       </div>
     </footer>

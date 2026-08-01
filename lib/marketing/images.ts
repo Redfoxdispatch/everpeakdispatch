@@ -5,15 +5,18 @@
  * CDN at runtime. Traceable back to the original source photo ID in each
  * comment for attribution/replacement.
  *
+ * This is a truck dispatch freight brokerage — imagery is road/trucking
+ * (highways, semis, flatbeds, warehouses), never ocean/port/vessel freight.
+ *
  * Swap for commissioned photography once available — every usage in the
  * codebase reads from this file, so replacement is a one-line change.
  */
 
 export const MARKETING_IMAGES = {
-  /** Container port at night, cranes lit gold against a dark sky — hero background. Source: unsplash.com/photos/1758745791998-11ea5eb5df40 */
-  portAtNight: {
-    src: "/images/marketing/port-at-night.jpg",
-    alt: "Container port with illuminated cranes at night",
+  /** Semi truck approaching on a highway at night, headlights cutting through fog — hero background. Source: unsplash.com/photos/1736134869393-bb43683d5d28 */
+  truckHighwayNight: {
+    src: "/images/marketing/truck-highway-night.jpg",
+    alt: "Semi truck driving down a highway at night",
   },
   /** Cable-stayed bridge at golden hour with a freight truck crossing. Source: unsplash.com/photos/1504846257989-a76209d9d2ac */
   bridgeAtDusk: {
@@ -30,19 +33,19 @@ export const MARKETING_IMAGES = {
     src: "/images/marketing/highway-interchange.jpg",
     alt: "Aerial view of a highway interchange at night",
   },
-  /** Straight-down aerial of a container ship underway — editorial, graphic. Source: unsplash.com/photos/1594110336951-5bc8c12d6b27 */
-  shipTopDown: {
-    src: "/images/marketing/ship-top-down.jpg",
-    alt: "Aerial view directly above a container ship at sea",
+  /** Straight-down aerial of a truck and cars on a highway through farmland — editorial, graphic. Source: unsplash.com/photos/1708193203896-ba0630862bb6 */
+  highwayTrucksAerial: {
+    src: "/images/marketing/highway-trucks-aerial.jpg",
+    alt: "Aerial view of a truck and cars on a highway",
   },
-  /** Straight-down aerial of a tanker/bulk carrier — deep navy water. Source: unsplash.com/photos/1518527989017-5baca7a58d3c */
-  tankerTopDown: {
-    src: "/images/marketing/tanker-top-down.jpg",
-    alt: "Aerial view directly above a tanker vessel at sea",
+  /** Trucks on a highway at dusk, dramatic sky. Source: unsplash.com/photos/1745956983820-6e960f7e8472 */
+  highwaySunsetTrucks: {
+    src: "/images/marketing/highway-sunset-trucks.jpg",
+    alt: "Trucks driving on a highway at sunset",
   },
-  /** Low-angle wall of stacked shipping containers. Source: unsplash.com/photos/1710762382866-2d12000736ea */
-  containerWall: {
-    src: "/images/marketing/container-wall.jpg",
-    alt: "Low-angle view of stacked shipping containers",
+  /** Flatbed trailer truck on a winding mountain road at dusk. Source: unsplash.com/photos/1564957341116-ab017c60daca */
+  flatbedMountainRoad: {
+    src: "/images/marketing/flatbed-mountain-road.jpg",
+    alt: "Flatbed trailer truck on a winding mountain road",
   },
 } as const;

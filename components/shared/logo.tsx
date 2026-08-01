@@ -47,7 +47,7 @@ export function Logo({
     <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
       <LogoMark variant={variant} className="size-7 shrink-0" />
       <span className={`font-heading text-lg font-medium tracking-tight ${textColor}`}>
-        BluePeakDispatch
+        EverPeakDispatch
       </span>
     </span>
   );

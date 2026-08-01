@@ -17,7 +17,7 @@ export default async function CarrierSignupPage() {
       title="Real freight, real lanes, no games."
       description="Tell us about your fleet. Our team verifies your authority and insurance before granting portal access."
     >
-      <h1 className="text-2xl font-semibold text-brand-ink">Haul freight with BluePeakDispatch</h1>
+      <h1 className="text-2xl font-semibold text-brand-ink">Haul freight with EverPeakDispatch</h1>
       <p className="mt-1.5 text-sm text-muted-foreground">Create your carrier account.</p>
       <div className="mt-8">
         <CarrierSignupForm equipmentTypes={equipmentTypes} />

@@ -1,4 +1,4 @@
-# BluePeakDispatch
+# EverPeakDispatch
 
 Freight brokerage management platform — public marketing site, shipper portal, carrier portal, internal operations dashboard, and admin panel. Built with Next.js 15 (App Router), TypeScript, Tailwind, Prisma 7 + Supabase Postgres, and Supabase Auth/Storage/Realtime.
 

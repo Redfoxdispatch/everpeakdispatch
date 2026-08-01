@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { FileText, Handshake, Radar, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroReveal, Reveal, RevealGroup, RevealItem } from "@/components/shared/motion";
 import { SplitText } from "@/components/shared/split-text";
 import { Magnetic } from "@/components/shared/magnetic";
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { ParallaxImage } from "@/components/shared/parallax-image";
+import { TestimonialCard } from "@/components/shared/testimonial-card";
 import { MARKETING_IMAGES } from "@/lib/marketing/images";
 
 const VALUE_PROPS = [
@@ -30,14 +32,61 @@ const TRUST_SIGNALS = [
   { value: 500, suffix: "+", label: "active carriers" },
 ];
 
+const PROCESS_STEPS = [
+  {
+    icon: FileText,
+    title: "Request a quote",
+    description: "Tell us your lane, freight type, and timeline. Get a rate back the same day.",
+  },
+  {
+    icon: Handshake,
+    title: "Get matched",
+    description: "We assign a carrier from our vetted network — active authority and insurance checked first.",
+  },
+  {
+    icon: Radar,
+    title: "Track transit",
+    description: "Follow pickup, transit, and delivery status without calling for an update.",
+  },
+  {
+    icon: FileCheck,
+    title: "Delivered & invoiced",
+    description: "Proof of delivery captured, invoice sent — no chasing paperwork after the fact.",
+  },
+];
+
+// Placeholder testimonials — composite of common shipper/carrier feedback,
+// not attributed to a specific named customer. Swap for real quotes at
+// launch; see lib/marketing/images.ts for the equivalent pattern used for
+// photography.
+const TESTIMONIALS = [
+  {
+    quote:
+      "We used to spend half the week chasing carriers for status updates. Now we just check the portal.",
+    role: "Operations Manager, Regional Food Distributor",
+    monogram: "RFD",
+    large: true,
+  },
+  {
+    quote: "Every load we've dispatched has moved at the agreed rate — no surprise accessorials.",
+    role: "Logistics Coordinator, Building Materials Supplier",
+    monogram: "BMS",
+  },
+  {
+    quote: "As a carrier, the difference is getting paid on time and never chasing a rate confirmation.",
+    role: "Owner-Operator, Flatbed Fleet",
+    monogram: "OO",
+  },
+];
+
 export default function HomePage() {
   return (
     <div>
-      {/* Hero — full-bleed port photography, navy duotone scrim, fixed nav overlays transparently at top. */}
+      {/* Hero — full-bleed highway trucking photography, navy duotone scrim, fixed nav overlays transparently at top. */}
       <section className="relative flex h-[92vh] min-h-[92vh] items-center overflow-hidden bg-brand-navy-950">
         <ParallaxImage
-          src={MARKETING_IMAGES.portAtNight.src}
-          alt={MARKETING_IMAGES.portAtNight.alt}
+          src={MARKETING_IMAGES.truckHighwayNight.src}
+          alt={MARKETING_IMAGES.truckHighwayNight.alt}
           fill
           strength={40}
           priority
@@ -50,7 +99,7 @@ export default function HomePage() {
           <div className="max-w-2xl">
             <HeroReveal>
               <span className="text-xs font-medium tracking-[0.15em] text-brand-gold-400 uppercase">
-                Global freight brokerage
+                Truck freight brokerage
               </span>
             </HeroReveal>
             <h1 className="mt-4 text-[clamp(2.75rem,5.5vw,4.75rem)] leading-[1.05] font-bold text-white">
@@ -143,6 +192,36 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* How it works — numbered process, connecting line on desktop. */}
+      <section className="border-t border-brand-navy-100 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-28">
+          <Reveal className="mx-auto max-w-xl text-center">
+            <span className="text-xs font-medium tracking-[0.15em] text-brand-gold-600 uppercase">
+              How it works
+            </span>
+            <h2 className="mt-3 text-[clamp(2.25rem,3vw,3rem)] leading-[1.15] font-semibold text-brand-ink">
+              From quote to delivery, four steps.
+            </h2>
+          </Reveal>
+          <RevealGroup className="relative mt-16 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            <div
+              aria-hidden="true"
+              className="absolute top-6 right-[12.5%] left-[12.5%] hidden h-px bg-brand-navy-100 lg:block"
+            />
+            {PROCESS_STEPS.map((step, i) => (
+              <RevealItem key={step.title} className="relative">
+                <div className="relative flex size-12 items-center justify-center rounded-full border border-brand-gold-500 bg-white">
+                  <step.icon className="size-5 text-brand-gold-600" strokeWidth={1.5} />
+                </div>
+                <div className="mt-5 font-heading text-sm text-brand-gold-600">0{i + 1}</div>
+                <h3 className="mt-1.5 text-lg font-semibold text-brand-ink">{step.title}</h3>
+                <p className="mt-2 text-muted-foreground">{step.description}</p>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
       {/* Full-bleed network motif break — parallax. */}
       <section className="relative h-[420px] overflow-hidden bg-brand-navy-950">
         <ParallaxImage
@@ -158,12 +237,12 @@ export default function HomePage() {
             <p className="text-2xl leading-snug font-medium text-white">
               &ldquo;Every lane, every load, tracked from pickup to delivery — no black box.&rdquo;
             </p>
-            <p className="mt-4 text-sm text-white/60">The BluePeakDispatch operations desk</p>
+            <p className="mt-4 text-sm text-white/60">The EverPeakDispatch operations desk</p>
           </Reveal>
         </div>
       </section>
 
-      {/* Global reach — 60/40 split, parallax bridge photography. */}
+      {/* Coast-to-coast coverage — 60/40 split, parallax bridge photography. */}
       <section className="overflow-hidden bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-16 px-6 py-28 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div>
@@ -198,6 +277,31 @@ export default function HomePage() {
               strength={50}
             />
           </Reveal>
+        </div>
+      </section>
+
+      {/* Testimonials — asymmetric grid, one lead quote + two smaller. */}
+      <section className="border-t border-brand-navy-100 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-28">
+          <Reveal>
+            <span className="text-xs font-medium tracking-[0.15em] text-brand-gold-600 uppercase">
+              Shippers and carriers
+            </span>
+            <h2 className="mt-3 max-w-lg text-[clamp(2.25rem,3vw,3rem)] leading-[1.15] font-semibold text-brand-ink">
+              What the network says.
+            </h2>
+          </Reveal>
+          <RevealGroup className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr] lg:grid-rows-2">
+            <RevealItem className="lg:row-span-2">
+              <TestimonialCard {...TESTIMONIALS[0]} />
+            </RevealItem>
+            <RevealItem>
+              <TestimonialCard {...TESTIMONIALS[1]} />
+            </RevealItem>
+            <RevealItem>
+              <TestimonialCard {...TESTIMONIALS[2]} />
+            </RevealItem>
+          </RevealGroup>
         </div>
       </section>
 

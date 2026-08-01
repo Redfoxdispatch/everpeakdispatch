@@ -24,12 +24,12 @@ const adminClient = createClient(
 const TEST_PASSWORD = "Test1234!";
 
 const TEST_USERS = [
-  { email: "super.admin@test.bluepeakdispatch.local", role: "super_admin", companyKey: "internal", fullName: "Test Super Admin" },
-  { email: "brokerage.admin@test.bluepeakdispatch.local", role: "brokerage_admin", companyKey: "internal", fullName: "Test Brokerage Admin" },
-  { email: "broker@test.bluepeakdispatch.local", role: "broker", companyKey: "internal", fullName: "Test Broker" },
-  { email: "shipper@test.bluepeakdispatch.local", role: "shipper_user", companyKey: "shipper", fullName: "Test Shipper User" },
-  { email: "carrier@test.bluepeakdispatch.local", role: "carrier_user", companyKey: "carrier", fullName: "Test Carrier User" },
-  { email: "driver@test.bluepeakdispatch.local", role: "driver", companyKey: "carrier", fullName: "Test Driver User" },
+  { email: "super.admin@test.everpeakdispatch.local", role: "super_admin", companyKey: "internal", fullName: "Test Super Admin" },
+  { email: "brokerage.admin@test.everpeakdispatch.local", role: "brokerage_admin", companyKey: "internal", fullName: "Test Brokerage Admin" },
+  { email: "broker@test.everpeakdispatch.local", role: "broker", companyKey: "internal", fullName: "Test Broker" },
+  { email: "shipper@test.everpeakdispatch.local", role: "shipper_user", companyKey: "shipper", fullName: "Test Shipper User" },
+  { email: "carrier@test.everpeakdispatch.local", role: "carrier_user", companyKey: "carrier", fullName: "Test Carrier User" },
+  { email: "driver@test.everpeakdispatch.local", role: "driver", companyKey: "carrier", fullName: "Test Driver User" },
 ] as const;
 
 async function ensureCompanies() {
@@ -39,7 +39,7 @@ async function ensureCompanies() {
     create: {
       id: "00000000-0000-0000-0000-000000000001",
       type: "internal",
-      legalName: "BluePeakDispatch (Internal)",
+      legalName: "EverPeakDispatch (Internal)",
     },
   });
 

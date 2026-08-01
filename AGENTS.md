@@ -1,4 +1,4 @@
-# BluePeakDispatch — Freight Brokerage Platform
+# EverPeakDispatch — Freight Brokerage Platform
 
 Full product/architecture docs live in `context/` (not shipped, git-ignored — read them locally): business workflow, RBAC, database schema, application architecture, UI/UX plan, and roadmap. Read the relevant doc before touching a new area of the codebase.
 

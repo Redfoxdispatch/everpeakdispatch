@@ -12,11 +12,11 @@ const STATUS_COPY: Record<CurrentUser["companyStatus"], { title: string; descrip
   active: { title: "", description: "" }, // unreachable — caller only renders this for non-active
   suspended: {
     title: "This account has been suspended",
-    description: "Contact BluePeakDispatch support for more information.",
+    description: "Contact EverPeakDispatch support for more information.",
   },
   archived: {
     title: "This account is no longer active",
-    description: "Contact BluePeakDispatch support if you believe this is a mistake.",
+    description: "Contact EverPeakDispatch support if you believe this is a mistake.",
   },
 };
 

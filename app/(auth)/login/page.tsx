@@ -6,8 +6,8 @@ import { LoginForm } from "./login-form";
 export default function LoginPage() {
   return (
     <AuthSplitLayout
-      image={MARKETING_IMAGES.portAtNight.src}
-      alt={MARKETING_IMAGES.portAtNight.alt}
+      image={MARKETING_IMAGES.truckHighwayNight.src}
+      alt={MARKETING_IMAGES.truckHighwayNight.alt}
       eyebrow="Welcome back"
       title="Operations, shipper, and carrier portals — one sign-in."
     >
@@ -17,7 +17,7 @@ export default function LoginPage() {
         <LoginForm />
       </div>
       <p className="mt-6 text-sm text-muted-foreground">
-        New to BluePeakDispatch?{" "}
+        New to EverPeakDispatch?{" "}
         <Link href="/shippers/signup" className="font-medium text-brand-gold-600 hover:underline">
           Sign up as a shipper
         </Link>{" "}

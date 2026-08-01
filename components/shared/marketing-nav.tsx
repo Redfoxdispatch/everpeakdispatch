@@ -27,26 +27,19 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 
 export function MarketingNav() {
   const pathname = usePathname();
-  // Transparent-over-hero only applies to the homepage's full-bleed dark
-  // hero. Every other page gets the compact "island" treatment immediately
-  // — pages without a matching full-bleed dark top section (e.g. Contact's
-  // two-tone split) would otherwise show the transparent gradient smearing
-  // across a light background. See context/design.md §9.
-  const isHome = pathname === "/";
-  const [scrolled, setScrolled] = useState(!isHome);
+  // Every marketing page starts with the default full-width transparent
+  // nav and transitions to the compact "island" pill once scrolled past
+  // the hero — consistent behavior site-wide, not just the homepage.
+  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const reduceMotion = useSafeReducedMotion();
 
   useEffect(() => {
-    if (!isHome) {
-      setScrolled(true);
-      return;
-    }
     const onScroll = () => setScrolled(window.scrollY > 40);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isHome]);
+  }, [pathname]);
 
   // Close the mobile panel on route change and prevent body scroll while open.
   useEffect(() => {
