@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(npm run *)",
+      "Bash(npx cross-env *)",
+      "Bash(rm -f tmp-check-bucket.mjs)",
+      "Bash(rm -f tmp-create-bucket.mjs)",
+      "Bash(netstat -ano)",
+      "Bash(node tmp-e2e-phase3.mjs)",
+      "Bash(node tmp-debug-select.mjs)",
+      "Bash(rm -f tmp-fix-uuids.mjs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)"
+    ]
+  }
+}

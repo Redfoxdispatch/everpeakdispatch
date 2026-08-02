@@ -1,131 +1,16 @@
 import "dotenv/config";
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import {
+  PERMISSIONS,
+  ROLE_NAMES as ROLES,
+  ROLE_PERMISSIONS,
+  type PermissionKey,
+  type SeedRoleName as RoleName,
+} from "../lib/permissions/constants";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
-
-const ROLES = [
-  "super_admin",
-  "brokerage_admin",
-  "broker",
-  "shipper_user",
-  "carrier_user",
-  "driver",
-] as const;
-
-type RoleName = (typeof ROLES)[number];
-
-// resource:action[:scope] — see context/02-rbac-roles-permissions.md §4
-const PERMISSIONS = [
-  "users:manage",
-  "roles:manage",
-  "settings:manage",
-  "audit_logs:read",
-  "companies:manage",
-  "companies:read:own",
-  "loads:create",
-  "loads:read:own",
-  "loads:read:all",
-  "loads:update:status",
-  "loads:cancel",
-  "quotes:create",
-  "quotes:accept",
-  "quotes:counter",
-  "quotes:reject",
-  "carrier_assignments:create",
-  "carrier_assignments:accept",
-  "carrier_assignments:decline",
-  "documents:upload",
-  "documents:approve",
-  "invoices:issue",
-  "invoices:read:own",
-  "payments:record",
-  "rates:view:sell",
-  "rates:view:buy",
-  "rates:view:margin",
-  "tracking_events:create",
-  "messages:send",
-  "notifications:read:own",
-] as const;
-
-type PermissionKey = (typeof PERMISSIONS)[number];
-
-// Derived from the permission matrix in context/02-rbac-roles-permissions.md §3
-const ROLE_PERMISSIONS: Record<RoleName, PermissionKey[]> = {
-  super_admin: [...PERMISSIONS],
-  brokerage_admin: [
-    "audit_logs:read",
-    "companies:manage",
-    "loads:create",
-    "loads:read:all",
-    "loads:update:status",
-    "loads:cancel",
-    "quotes:create",
-    "carrier_assignments:create",
-    "documents:upload",
-    "documents:approve",
-    "invoices:issue",
-    "payments:record",
-    "rates:view:sell",
-    "rates:view:buy",
-    "rates:view:margin",
-    "tracking_events:create",
-    "messages:send",
-    "notifications:read:own",
-  ],
-  broker: [
-    "loads:create",
-    "loads:read:all",
-    "loads:update:status",
-    "loads:cancel",
-    "quotes:create",
-    "carrier_assignments:create",
-    "documents:upload",
-    "documents:approve",
-    "invoices:issue",
-    "payments:record",
-    "rates:view:sell",
-    "rates:view:buy",
-    "rates:view:margin",
-    "tracking_events:create",
-    "messages:send",
-    "notifications:read:own",
-  ],
-  shipper_user: [
-    "companies:read:own",
-    "loads:create",
-    "loads:read:own",
-    "quotes:accept",
-    "quotes:counter",
-    "quotes:reject",
-    "documents:upload",
-    "invoices:read:own",
-    "payments:record",
-    "messages:send",
-    "notifications:read:own",
-  ],
-  carrier_user: [
-    "companies:read:own",
-    "loads:read:own",
-    "loads:update:status",
-    "carrier_assignments:accept",
-    "carrier_assignments:decline",
-    "documents:upload",
-    "invoices:read:own",
-    "rates:view:buy",
-    "tracking_events:create",
-    "messages:send",
-    "notifications:read:own",
-  ],
-  driver: [
-    "loads:read:own",
-    "loads:update:status",
-    "documents:upload",
-    "tracking_events:create",
-    "notifications:read:own",
-  ],
-};
 
 // code, label — see context/03-database-schema.md §3 equipment_types
 const EQUIPMENT_TYPES = [

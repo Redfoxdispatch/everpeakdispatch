@@ -34,20 +34,20 @@ const TEST_USERS = [
 
 async function ensureCompanies() {
   const internal = await prisma.company.upsert({
-    where: { id: "00000000-0000-0000-0000-000000000001" },
-    update: {},
+    where: { id: "00000000-0000-4000-8000-000000000001" },
+    update: { legalName: "EverPeakDispatch (Internal)" },
     create: {
-      id: "00000000-0000-0000-0000-000000000001",
+      id: "00000000-0000-4000-8000-000000000001",
       type: "internal",
       legalName: "EverPeakDispatch (Internal)",
     },
   });
 
   const shipper = await prisma.company.upsert({
-    where: { id: "00000000-0000-0000-0000-000000000002" },
+    where: { id: "00000000-0000-4000-8000-000000000002" },
     update: {},
     create: {
-      id: "00000000-0000-0000-0000-000000000002",
+      id: "00000000-0000-4000-8000-000000000002",
       type: "shipper",
       legalName: "Acme Test Shipper Co",
       shipperProfile: { create: {} },
@@ -55,10 +55,10 @@ async function ensureCompanies() {
   });
 
   const carrier = await prisma.company.upsert({
-    where: { id: "00000000-0000-0000-0000-000000000003" },
+    where: { id: "00000000-0000-4000-8000-000000000003" },
     update: {},
     create: {
-      id: "00000000-0000-0000-0000-000000000003",
+      id: "00000000-0000-4000-8000-000000000003",
       type: "carrier",
       legalName: "Test Carrier Co",
       carrierProfile: {
