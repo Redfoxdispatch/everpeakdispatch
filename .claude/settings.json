@@ -28,7 +28,22 @@
       "Bash(echo \"started with PID $!\")",
       "Bash(node tmp-e2e-phase4.mjs)",
       "Bash(cd \"/d/REDFOX DISPATCH/New Brokerage web app\" && tail -60 /tmp/dev-server.log 2>&1)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(awk '/^model Vehicle /,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model Driver /,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model CarrierProfile/,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model CarrierAssignment/,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model Document /,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^enum VehicleStatus/,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^enum DriverStatus/,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model EquipmentType/,/^}/' prisma/schema.prisma)",
+      "Bash(node tmp-e2e-phase5.mjs)",
+      "Bash(nohup npm run dev)",
+      "Bash(disown)",
+      "Bash(tail -40 /tmp/dev-server.log 2>&1)",
+      "Bash(tail -20 /tmp/dev-server.log 2>&1)",
+      "Bash(rm -f tmp-cleanup-phase5.mjs)",
+      "Bash(npx tsx *)"
     ]
   }
 }
