@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "cross-env NODE_OPTIONS=\"--require ./scripts/dns-fix.cjs\" next dev",
     "build": "cross-env NODE_OPTIONS=\"--require ./scripts/dns-fix.cjs\" next build",
     "start": "cross-env NODE_OPTIONS=\"--require ./scripts/dns-fix.cjs\" next start",
