@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { StopsEditor, useStopsDraft } from "@/components/shared/stops-editor";
-import { createLoad, type CreateLoadState } from "../actions";
+import { createShipment, type CreateShipmentState } from "../actions";
 
 const inputClass =
   "w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30";
@@ -14,19 +14,13 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Creating..." : "Create load"}
+      {pending ? "Submitting..." : "Submit shipment request"}
     </Button>
   );
 }
 
-export function NewLoadForm({
-  shippers,
-  equipmentTypes,
-}: {
-  shippers: { id: string; legalName: string; dbaName: string | null }[];
-  equipmentTypes: { code: string; label: string }[];
-}) {
-  const [state, formAction] = useActionState<CreateLoadState, FormData>(createLoad, {});
+export function ShipmentForm({ equipmentTypes }: { equipmentTypes: { code: string; label: string }[] }) {
+  const [state, formAction] = useActionState<CreateShipmentState, FormData>(createShipment, {});
   const { stops, updateStop, addStop, removeStop } = useStopsDraft();
 
   return (
@@ -34,19 +28,6 @@ export function NewLoadForm({
       <input type="hidden" name="stopsJson" value={JSON.stringify(stops)} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className={labelClass}>Shipper</label>
-          <select name="shipperCompanyId" required className={`mt-1 ${inputClass}`} defaultValue="">
-            <option value="" disabled>
-              Select a shipper
-            </option>
-            {shippers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.dbaName ?? s.legalName}
-              </option>
-            ))}
-          </select>
-        </div>
         <div>
           <label className={labelClass}>Mode</label>
           <select name="mode" required className={`mt-1 ${inputClass}`} defaultValue="ftl">

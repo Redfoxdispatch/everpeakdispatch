@@ -137,7 +137,12 @@ export async function updateLoadStatus(loadId: string, nextStatus: LoadStatus): 
     return { error: `Cannot move a ${load.status} load directly to ${nextStatus}.` };
   }
 
-  await db.load.update({ where: { id: loadId }, data: { status: nextStatus } });
+  await db.$transaction([
+    db.load.update({ where: { id: loadId }, data: { status: nextStatus } }),
+    db.trackingEvent.create({
+      data: { loadId, eventType: "status_change", status: nextStatus, source: "manual", createdBy: user.id },
+    }),
+  ]);
   await writeAuditLog({
     actorUserId: user.id,
     action: "load.status_changed",
@@ -168,10 +173,22 @@ export async function cancelLoad(loadId: string, reason: string): Promise<{ erro
     return { error: `A ${load.status} load cannot be cancelled — see context/01-business-workflow.md §4.1 for the in-transit exception workflow.` };
   }
 
-  await db.load.update({
-    where: { id: loadId },
-    data: { status: "cancelled", cancelledReason: parsed.data.reason, cancelledAt: new Date() },
-  });
+  await db.$transaction([
+    db.load.update({
+      where: { id: loadId },
+      data: { status: "cancelled", cancelledReason: parsed.data.reason, cancelledAt: new Date() },
+    }),
+    db.trackingEvent.create({
+      data: {
+        loadId,
+        eventType: "exception",
+        status: "cancelled",
+        description: parsed.data.reason,
+        source: "manual",
+        createdBy: user.id,
+      },
+    }),
+  ]);
   await writeAuditLog({
     actorUserId: user.id,
     action: "load.cancelled",

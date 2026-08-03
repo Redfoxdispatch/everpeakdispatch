@@ -24,6 +24,12 @@ const stopSchema = z
     path: ["appointmentLatest"],
   });
 
+const stopsArraySchema = z
+  .array(stopSchema)
+  .min(2, "At least a pickup and a delivery stop are required")
+  .refine((stops) => stops[0]?.stopType === "pickup", "The first stop must be a pickup")
+  .refine((stops) => stops[stops.length - 1]?.stopType === "delivery", "The last stop must be a delivery");
+
 export const createLoadSchema = z.object({
   shipperCompanyId: z.string().uuid("Select a shipper"),
   mode: z.enum(["ftl", "ltl"]),
@@ -31,14 +37,15 @@ export const createLoadSchema = z.object({
   commodity: z.string().trim().min(1, "Commodity is required").max(200),
   weightLbs: z.coerce.number().int().positive("Weight must be greater than 0"),
   specialInstructions: z.string().trim().max(2000).optional().or(z.literal("")),
-  stops: z
-    .array(stopSchema)
-    .min(2, "At least a pickup and a delivery stop are required")
-    .refine((stops) => stops[0]?.stopType === "pickup", "The first stop must be a pickup")
-    .refine((stops) => stops[stops.length - 1]?.stopType === "delivery", "The last stop must be a delivery"),
+  stops: stopsArraySchema,
 });
 
 export type CreateLoadInput = z.infer<typeof createLoadSchema>;
+
+/** Shipper self-service RFQ — same shape minus shipperCompanyId, which is implied by the actor's own company. */
+export const createShipmentSchema = createLoadSchema.omit({ shipperCompanyId: true });
+
+export type CreateShipmentInput = z.infer<typeof createShipmentSchema>;
 
 export const updateLoadStatusSchema = z.object({
   loadId: z.string().uuid(),

@@ -90,6 +90,9 @@ export async function issueInvoice(loadId: string, type: InvoiceType): Promise<I
     });
     if (type === "shipper_invoice" && load.status === "completed") {
       await tx.load.update({ where: { id: loadId }, data: { status: "invoiced" } });
+      await tx.trackingEvent.create({
+        data: { loadId, eventType: "status_change", status: "invoiced", source: "manual", createdBy: user.id },
+      });
     }
     return created;
   });
@@ -151,6 +154,15 @@ export async function recordPayment(_prevState: InvoiceActionState, formData: Fo
       where: { id: invoice.id },
       data: { amountPaid: newAmountPaid, status: newStatus },
     });
+    if (invoice.type === "shipper_invoice" && newStatus === "paid") {
+      const load = await tx.load.findUnique({ where: { id: invoice.loadId }, select: { status: true } });
+      if (load?.status === "invoiced") {
+        await tx.load.update({ where: { id: invoice.loadId }, data: { status: "paid" } });
+        await tx.trackingEvent.create({
+          data: { loadId: invoice.loadId, eventType: "status_change", status: "paid", source: "manual", createdBy: user.id },
+        });
+      }
+    }
   });
 
   await writeAuditLog({

@@ -12,7 +12,23 @@
       "Bash(node tmp-debug-select.mjs)",
       "Bash(rm -f tmp-fix-uuids.mjs)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)",
-      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "Bash(awk '/^model Invoice /,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model TrackingEvent /,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^enum TrackingEventType/,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^enum TrackingSource/,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model Quote /,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model Company /,/^}/' prisma/schema.prisma)",
+      "Bash(awk '/^model ShipperProfile/,/^}/' prisma/schema.prisma)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/shipper/dashboard)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue)",
+      "Bash(echo \"started with PID $!\")",
+      "Bash(node tmp-e2e-phase4.mjs)",
+      "Bash(cd \"/d/REDFOX DISPATCH/New Brokerage web app\" && tail -60 /tmp/dev-server.log 2>&1)",
+      "Read(//tmp/**)"
     ]
   }
 }

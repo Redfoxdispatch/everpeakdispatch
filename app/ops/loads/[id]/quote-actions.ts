@@ -52,6 +52,9 @@ export async function createQuote(_prevState: QuoteActionState, formData: FormDa
     });
     if (load.status !== "quoted") {
       await tx.load.update({ where: { id: load.id }, data: { status: "quoted" } });
+      await tx.trackingEvent.create({
+        data: { loadId: load.id, eventType: "status_change", status: "quoted", source: "manual", createdBy: user.id },
+      });
     }
     return created;
   });
@@ -103,6 +106,9 @@ export async function recordQuoteAcceptance(loadId: string, quoteId: string): Pr
       data: { loadId, quoteId, confirmedRate: quote.sellRate, bookedBy: user.id },
     });
     await tx.load.update({ where: { id: loadId }, data: { status: "booked", acceptedQuoteId: quoteId } });
+    await tx.trackingEvent.create({
+      data: { loadId, eventType: "status_change", status: "booked", source: "manual", createdBy: user.id },
+    });
   });
 
   await writeAuditLog({
@@ -136,6 +142,16 @@ export async function recordQuoteRejection(loadId: string, quoteId: string, reas
     await tx.quote.update({ where: { id: quoteId }, data: { status: "rejected" } });
     if (load.status === "quoted") {
       await tx.load.update({ where: { id: loadId }, data: { status: "quote_requested" } });
+      await tx.trackingEvent.create({
+        data: {
+          loadId,
+          eventType: "status_change",
+          status: "quote_requested",
+          description: reason || "Quote rejected",
+          source: "manual",
+          createdBy: user.id,
+        },
+      });
     }
   });
 
