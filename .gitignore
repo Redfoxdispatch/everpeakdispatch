@@ -57,4 +57,18 @@ skills-lock.json
 # editor / os
 .vscode/*
 !.vscode/extensions.json
+.idea/
 Thumbs.db
+desktop.ini
+
+# claude code — personal/local, not shared project config
+/.claude/settings.local.json
+/.claude/scheduled_tasks.lock
+
+# playwright — ad-hoc local E2E scratch scripts and their output
+tmp-*.mjs
+tmp-*.mts
+tmp-*.png
+/test-results/
+/playwright-report/
+/playwright/.cache/
