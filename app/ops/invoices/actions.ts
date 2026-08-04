@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { assertPermission } from "@/lib/permissions/can";
 import { writeAuditLog } from "@/lib/audit/log";
+import { notifyCompany } from "@/lib/notifications/create";
 import { generateInvoiceNumber } from "@/lib/invoices/generate-invoice-number";
 import { recordPaymentSchema } from "@/lib/validations/invoice";
 import type { InvoiceType } from "@/lib/generated/prisma/client";
@@ -104,6 +105,15 @@ export async function issueInvoice(loadId: string, type: InvoiceType): Promise<I
     entityId: invoice.id,
     after: { loadId, invoiceNumber, totalAmount: rate },
   });
+
+  if (type === "shipper_invoice") {
+    await notifyCompany(load.shipperCompanyId, {
+      type: "invoice_issued",
+      title: `Invoice ${invoiceNumber} issued`,
+      body: `$${rate.toLocaleString()} for ${load.loadNumber} — due ${dueDate.toLocaleDateString()}.`,
+      link: `/shipper/shipments/${loadId}`,
+    });
+  }
 
   revalidatePath(`/ops/loads/${loadId}`);
   revalidatePath("/ops/invoices");

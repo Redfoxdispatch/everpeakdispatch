@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { assertPermission } from "@/lib/permissions/can";
 import { writeAuditLog } from "@/lib/audit/log";
+import { notifyUser } from "@/lib/notifications/create";
 
 export type QuoteResponseState = { error?: string };
 
@@ -56,6 +57,13 @@ export async function acceptQuote(loadId: string, quoteId: string): Promise<Quot
     entityId: quoteId,
     before: { status: "pending" },
     after: { status: "accepted", loadStatus: "booked" },
+  });
+
+  await notifyUser(load.createdBy, {
+    type: "quote_accepted",
+    title: `Quote accepted for ${load.loadNumber}`,
+    body: `The shipper accepted — book a carrier.`,
+    link: `/ops/loads/${loadId}`,
   });
 
   revalidatePath(`/shipper/shipments/${loadId}`);

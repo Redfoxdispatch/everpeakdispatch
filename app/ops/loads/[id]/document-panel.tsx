@@ -1,11 +1,9 @@
-"use client";
-
-import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { DocumentUploadForm } from "@/components/shared/document-upload-form";
 import { DOCUMENT_STATUS_META } from "@/lib/status";
-import { uploadDocument, type DocumentActionState } from "../../documents/actions";
+import { DOCUMENT_TYPE_LABEL } from "@/lib/storage/documents";
+import type { DocumentType, DocumentVisibility } from "@/lib/generated/prisma/client";
 
 type DocumentRow = {
   id: string;
@@ -15,49 +13,35 @@ type DocumentRow = {
   rejectedReason: string | null;
 };
 
-const DOCUMENT_TYPE_LABEL: Record<string, string> = {
-  bol: "Bill of Lading",
-  pod: "Proof of Delivery",
-  rate_confirmation: "Rate Confirmation",
-  insurance_certificate: "Insurance Certificate",
-  w9: "W-9",
-  invoice: "Invoice",
-  other: "Other",
-};
+const ALL_DOCUMENT_TYPES = Object.entries(DOCUMENT_TYPE_LABEL).map(([value, label]) => ({
+  value: value as DocumentType,
+  label,
+}));
 
-const inputClass =
-  "w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30";
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" size="sm" disabled={pending}>
-      {pending ? "Uploading..." : "Upload"}
-    </Button>
-  );
-}
+const VISIBILITY_OPTIONS: { value: DocumentVisibility; label: string }[] = [
+  { value: "internal", label: "Internal only" },
+  { value: "shipper", label: "Shipper" },
+  { value: "carrier", label: "Carrier" },
+  { value: "public", label: "Public" },
+];
 
 export function DocumentPanel({ loadId, documents, canUpload }: { loadId: string; documents: DocumentRow[]; canUpload: boolean }) {
-  const [showForm, setShowForm] = useState(false);
-  const [state, formAction] = useActionState<DocumentActionState, FormData>(uploadDocument, {});
-
   return (
     <div className="rounded-lg border p-4">
-      <div className="flex items-center justify-between">
+      {canUpload ? (
+        <DocumentUploadForm loadId={loadId} documentTypes={ALL_DOCUMENT_TYPES} visibilityOptions={VISIBILITY_OPTIONS} />
+      ) : (
         <h2 className="text-sm font-semibold">Documents</h2>
-        {canUpload ? (
-          <Button size="sm" variant="outline" onClick={() => setShowForm((v) => !v)}>
-            {showForm ? "Cancel" : "Upload"}
-          </Button>
-        ) : null}
-      </div>
+      )}
 
       {documents.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {documents.map((d) => (
             <li key={d.id} className="flex items-center justify-between rounded-md border p-2.5 text-sm">
               <div>
-                <div className="font-medium">{DOCUMENT_TYPE_LABEL[d.documentType] ?? d.documentType}</div>
+                <Link href={`/api/documents/${d.id}/download`} className="font-medium text-primary hover:underline">
+                  {DOCUMENT_TYPE_LABEL[d.documentType as DocumentType] ?? d.documentType}
+                </Link>
                 {d.rejectedReason ? <div className="text-xs text-destructive">{d.rejectedReason}</div> : null}
               </div>
               <StatusBadge meta={DOCUMENT_STATUS_META[d.status]} />
@@ -67,40 +51,6 @@ export function DocumentPanel({ loadId, documents, canUpload }: { loadId: string
       ) : (
         <p className="mt-3 text-sm text-muted-foreground">No documents uploaded yet.</p>
       )}
-
-      {canUpload && showForm ? (
-        <form action={formAction} className="mt-4 space-y-3 border-t pt-4">
-          <input type="hidden" name="loadId" value={loadId} />
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Document type</label>
-            <select name="documentType" required className={`mt-1 ${inputClass}`} defaultValue="">
-              <option value="" disabled>
-                Select type
-              </option>
-              {Object.entries(DOCUMENT_TYPE_LABEL).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Visible to</label>
-            <select name="visibility" required className={`mt-1 ${inputClass}`} defaultValue="internal">
-              <option value="internal">Internal only</option>
-              <option value="shipper">Shipper</option>
-              <option value="carrier">Carrier</option>
-              <option value="public">Public</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">File</label>
-            <input type="file" name="file" required className={`mt-1 ${inputClass} file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs`} />
-          </div>
-          {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-          <SubmitButton />
-        </form>
-      ) : null}
     </div>
   );
 }

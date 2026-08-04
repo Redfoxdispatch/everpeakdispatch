@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { assertPermission } from "@/lib/permissions/can";
 import { writeAuditLog } from "@/lib/audit/log";
+import { notifyCompany } from "@/lib/notifications/create";
 import { createQuoteSchema } from "@/lib/validations/quote";
 
 export type QuoteActionState = { error?: string };
@@ -65,6 +66,13 @@ export async function createQuote(_prevState: QuoteActionState, formData: FormDa
     entityType: "quotes",
     entityId: quote.id,
     after: { loadId: load.id, sellRate: parsed.data.sellRate, version: quote.version },
+  });
+
+  await notifyCompany(load.shipperCompanyId, {
+    type: "quote_created",
+    title: `New quote for ${load.loadNumber}`,
+    body: `$${Number(parsed.data.sellRate).toLocaleString()} — review and respond.`,
+    link: `/shipper/shipments/${load.id}`,
   });
 
   revalidatePath(`/ops/loads/${load.id}`);

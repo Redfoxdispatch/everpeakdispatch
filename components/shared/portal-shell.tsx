@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/(auth)/login/actions";
+import { db } from "@/lib/db/client";
 import type { CurrentUser } from "@/lib/auth/session";
+import { NotificationBell, type NotificationRow } from "./notification-bell";
 
 export type NavItem = {
   label: string;
   href: string;
 };
 
-export function PortalShell({
+export async function PortalShell({
   portalName,
   navItems,
   user,
@@ -19,6 +21,20 @@ export function PortalShell({
   user: CurrentUser;
   children: React.ReactNode;
 }) {
+  const [notifications, unreadCount] = await Promise.all([
+    db.notification.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 20 }),
+    db.notification.count({ where: { userId: user.id, readAt: null } }),
+  ]);
+  const initialNotifications: NotificationRow[] = notifications.map((n) => ({
+    id: n.id,
+    type: n.type,
+    title: n.title,
+    body: n.body,
+    link: n.link,
+    readAt: n.readAt?.toISOString() ?? null,
+    createdAt: n.createdAt.toISOString(),
+  }));
+
   return (
     <div className="flex min-h-svh">
       <aside className="flex w-60 shrink-0 flex-col border-r bg-muted/20 p-4">
@@ -46,7 +62,12 @@ export function PortalShell({
           </form>
         </div>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <div className="flex flex-1 flex-col">
+        <header className="flex items-center justify-end border-b px-6 py-2.5">
+          <NotificationBell userId={user.id} initialNotifications={initialNotifications} initialUnreadCount={unreadCount} />
+        </header>
+        <main className="flex-1 p-6">{children}</main>
+      </div>
     </div>
   );
 }

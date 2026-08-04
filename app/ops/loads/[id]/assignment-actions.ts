@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { assertPermission } from "@/lib/permissions/can";
 import { writeAuditLog } from "@/lib/audit/log";
+import { notifyCompany } from "@/lib/notifications/create";
 import { offerToCarrierSchema } from "@/lib/validations/carrier-assignment";
 
 export type AssignmentActionState = { error?: string };
@@ -72,6 +73,13 @@ export async function offerToCarrier(_prevState: AssignmentActionState, formData
     entityType: "carrier_assignments",
     entityId: load.id,
     after: { loadId: load.id, carrierCompanyId: carrier.id, carrierRate: parsed.data.carrierRate },
+  });
+
+  await notifyCompany(carrier.id, {
+    type: "load_offered",
+    title: `New load offer: ${load.loadNumber}`,
+    body: `$${Number(parsed.data.carrierRate).toLocaleString()} — review on your Available Loads board.`,
+    link: "/carrier/loads/available",
   });
 
   revalidatePath(`/ops/loads/${load.id}`);

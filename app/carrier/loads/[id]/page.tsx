@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -6,9 +7,14 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { LOAD_STATUS_META, DOCUMENT_STATUS_META } from "@/lib/status";
 import { CarrierStatusControls } from "./status-controls";
 import { StaffingForm } from "./staffing-form";
-import { DocumentUploadForm } from "./document-upload-form";
+import { DocumentUploadForm } from "@/components/shared/document-upload-form";
+import { DOCUMENT_TYPE_LABEL } from "@/lib/storage/documents";
+import type { DocumentType } from "@/lib/generated/prisma/client";
 
-const DOCUMENT_TYPE_LABEL: Record<string, string> = { bol: "Bill of Lading", pod: "Proof of Delivery" };
+const CARRIER_LOAD_DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
+  { value: "bol", label: DOCUMENT_TYPE_LABEL.bol },
+  { value: "pod", label: DOCUMENT_TYPE_LABEL.pod },
+];
 
 export default async function CarrierShipmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -98,12 +104,14 @@ export default async function CarrierShipmentDetailPage({ params }: { params: Pr
         </div>
 
         <div className="rounded-lg border p-4 lg:col-span-2">
-          <DocumentUploadForm loadId={assignment.loadId} />
+          <DocumentUploadForm loadId={assignment.loadId} documentTypes={CARRIER_LOAD_DOCUMENT_TYPES} />
           {documents.length > 0 ? (
             <ul className="mt-3 space-y-2">
               {documents.map((d) => (
                 <li key={d.id} className="flex items-center justify-between rounded-md border p-2.5 text-sm">
-                  <div className="font-medium">{DOCUMENT_TYPE_LABEL[d.documentType] ?? d.documentType}</div>
+                  <Link href={`/api/documents/${d.id}/download`} className="font-medium text-primary hover:underline">
+                    {DOCUMENT_TYPE_LABEL[d.documentType] ?? d.documentType}
+                  </Link>
                   <StatusBadge meta={DOCUMENT_STATUS_META[d.status]} />
                 </li>
               ))}

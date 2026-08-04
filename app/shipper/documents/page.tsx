@@ -7,16 +7,7 @@ import { DataTable, type DataTableColumn } from "@/components/shared/data-table"
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DOCUMENT_STATUS_META } from "@/lib/status";
-
-const DOCUMENT_TYPE_LABEL: Record<string, string> = {
-  bol: "Bill of Lading",
-  pod: "Proof of Delivery",
-  rate_confirmation: "Rate Confirmation",
-  insurance_certificate: "Insurance Certificate",
-  w9: "W-9",
-  invoice: "Invoice",
-  other: "Other",
-};
+import { DOCUMENT_TYPE_LABEL } from "@/lib/storage/documents";
 
 export default async function ShipperDocumentsPage() {
   const user = await getCurrentUser();
@@ -55,6 +46,16 @@ export default async function ShipperDocumentsPage() {
       key: "status",
       header: "Status",
       render: (row) => <StatusBadge meta={DOCUMENT_STATUS_META[row.status]} />,
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "text-right",
+      render: (row) => (
+        <Link href={`/api/documents/${row.id}/download`} className="text-xs font-medium text-primary hover:underline">
+          View
+        </Link>
+      ),
     },
   ];
 

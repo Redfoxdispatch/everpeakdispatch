@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { assertPermission } from "@/lib/permissions/can";
 import { writeAuditLog } from "@/lib/audit/log";
+import { notifyUser, notifyCompany } from "@/lib/notifications/create";
 import type { LoadStatus } from "@/lib/generated/prisma/client";
 
 export type CarrierActionState = { error?: string };
@@ -21,7 +22,7 @@ export async function respondToOffer(loadId: string, assignmentId: string, accep
   if (!user) redirect("/login");
   await assertPermission(user, accepted ? "carrier_assignments:accept" : "carrier_assignments:decline");
 
-  const assignment = await db.carrierAssignment.findUnique({ where: { id: assignmentId } });
+  const assignment = await db.carrierAssignment.findUnique({ where: { id: assignmentId }, include: { load: true } });
   if (!assignment || assignment.loadId !== loadId || assignment.carrierCompanyId !== user.companyId) {
     return { error: "Offer not found." };
   }
@@ -48,6 +49,12 @@ export async function respondToOffer(loadId: string, assignmentId: string, accep
     entityType: "carrier_assignments",
     entityId: assignmentId,
     after: { status: accepted ? "accepted" : "declined" },
+  });
+
+  await notifyUser(assignment.load.createdBy, {
+    type: accepted ? "carrier_accepted" : "carrier_declined",
+    title: `${assignment.load.loadNumber}: carrier ${accepted ? "accepted" : "declined"} the offer`,
+    link: `/ops/loads/${loadId}`,
   });
 
   revalidatePath("/carrier/loads/available");
@@ -94,6 +101,18 @@ export async function updateShipmentStatus(loadId: string, nextStatus: LoadStatu
     before: { status: load.status },
     after: { status: nextStatus },
   });
+
+  // context/01-business-workflow.md §5: only these two carrier-driven
+  // transitions are notification-worthy — the intermediate ones
+  // (at_pickup, in_transit, at_delivery) are visible on the tracking view
+  // but aren't listed as a notification trigger.
+  if (nextStatus === "picked_up" || nextStatus === "delivered") {
+    const title = `${load.loadNumber} ${nextStatus === "picked_up" ? "picked up" : "delivered"}`;
+    await Promise.all([
+      notifyCompany(load.shipperCompanyId, { type: "status_change", title, link: `/shipper/shipments/${loadId}` }),
+      notifyUser(load.createdBy, { type: "status_change", title, link: `/ops/loads/${loadId}` }),
+    ]);
+  }
 
   revalidatePath(`/carrier/loads/${loadId}`);
   revalidatePath("/carrier/loads");
@@ -143,6 +162,12 @@ export async function reportFellOff(loadId: string, assignmentId: string, reason
     entityId: assignmentId,
     after: { status: "fell_off", reason },
   });
+
+  const title = `${load.loadNumber}: carrier fell off — ${reason}`;
+  await Promise.all([
+    notifyCompany(load.shipperCompanyId, { type: "exception", title, link: `/shipper/shipments/${loadId}` }),
+    notifyUser(load.createdBy, { type: "exception", title, link: `/ops/loads/${loadId}` }),
+  ]);
 
   revalidatePath(`/carrier/loads/${loadId}`);
   revalidatePath("/carrier/loads");

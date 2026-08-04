@@ -6,14 +6,14 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DOCUMENT_STATUS_META } from "@/lib/status";
-import { ComplianceUploadForm } from "./compliance-upload-form";
+import { DocumentUploadForm } from "@/components/shared/document-upload-form";
+import { DOCUMENT_TYPE_LABEL } from "@/lib/storage/documents";
+import type { DocumentType } from "@/lib/generated/prisma/client";
 
-const DOCUMENT_TYPE_LABEL: Record<string, string> = {
-  bol: "Bill of Lading",
-  pod: "Proof of Delivery",
-  insurance_certificate: "Insurance Certificate",
-  w9: "W-9",
-};
+const CARRIER_COMPLIANCE_DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
+  { value: "insurance_certificate", label: DOCUMENT_TYPE_LABEL.insurance_certificate },
+  { value: "w9", label: DOCUMENT_TYPE_LABEL.w9 },
+];
 
 export default async function CarrierDocumentsPage() {
   const user = await getCurrentUser();
@@ -34,12 +34,14 @@ export default async function CarrierDocumentsPage() {
       <p className="mt-1 text-sm text-muted-foreground">Compliance documents for your company, and per-load documents.</p>
 
       <div className="mt-6 rounded-lg border p-4">
-        <ComplianceUploadForm />
+        <DocumentUploadForm documentTypes={CARRIER_COMPLIANCE_DOCUMENT_TYPES} toggleLabel="Upload" />
         {complianceDocs.length > 0 ? (
           <ul className="mt-3 space-y-2">
             {complianceDocs.map((d) => (
               <li key={d.id} className="flex items-center justify-between rounded-md border p-2.5 text-sm">
-                <div className="font-medium">{DOCUMENT_TYPE_LABEL[d.documentType] ?? d.documentType}</div>
+                <Link href={`/api/documents/${d.id}/download`} className="font-medium text-primary hover:underline">
+                  {DOCUMENT_TYPE_LABEL[d.documentType] ?? d.documentType}
+                </Link>
                 <StatusBadge meta={DOCUMENT_STATUS_META[d.status]} />
               </li>
             ))}
@@ -59,11 +61,15 @@ export default async function CarrierDocumentsPage() {
               {loadDocs.map((d) => (
                 <li key={d.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
                   <div>
-                    <div className="font-medium">{DOCUMENT_TYPE_LABEL[d.documentType] ?? d.documentType}</div>
+                    <Link href={`/api/documents/${d.id}/download`} className="font-medium text-primary hover:underline">
+                      {DOCUMENT_TYPE_LABEL[d.documentType] ?? d.documentType}
+                    </Link>
                     {d.load ? (
-                      <Link href={`/carrier/loads/${d.load.id}`} className="text-xs text-primary hover:underline">
-                        {d.load.loadNumber}
-                      </Link>
+                      <div>
+                        <Link href={`/carrier/loads/${d.load.id}`} className="text-xs text-muted-foreground hover:underline">
+                          {d.load.loadNumber}
+                        </Link>
+                      </div>
                     ) : null}
                   </div>
                   <StatusBadge meta={DOCUMENT_STATUS_META[d.status]} />

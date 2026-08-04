@@ -8,17 +8,8 @@ import { DataTable, type DataTableColumn } from "@/components/shared/data-table"
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DOCUMENT_STATUS_META } from "@/lib/status";
+import { DOCUMENT_TYPE_LABEL } from "@/lib/storage/documents";
 import { DocumentReviewActions } from "./review-actions";
-
-const DOCUMENT_TYPE_LABEL: Record<string, string> = {
-  bol: "Bill of Lading",
-  pod: "Proof of Delivery",
-  rate_confirmation: "Rate Confirmation",
-  insurance_certificate: "Insurance Certificate",
-  w9: "W-9",
-  invoice: "Invoice",
-  other: "Other",
-};
 
 export default async function OpsDocumentsPage() {
   const user = await getCurrentUser();
@@ -37,7 +28,9 @@ export default async function OpsDocumentsPage() {
       header: "Type",
       render: (row) => (
         <div>
-          <div className="font-medium">{DOCUMENT_TYPE_LABEL[row.documentType] ?? row.documentType}</div>
+          <Link href={`/api/documents/${row.id}/download`} className="font-medium text-primary hover:underline">
+            {DOCUMENT_TYPE_LABEL[row.documentType] ?? row.documentType}
+          </Link>
           <div className="text-xs text-muted-foreground">{new Date(row.createdAt).toLocaleString()}</div>
         </div>
       ),

@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { assertPermission } from "@/lib/permissions/can";
 import { writeAuditLog } from "@/lib/audit/log";
+import { notifyUser } from "@/lib/notifications/create";
 import { recordPaymentSchema } from "@/lib/validations/invoice";
 
 export type InvoiceActionState = { error?: string };
@@ -85,6 +86,16 @@ export async function payShipperInvoice(_prevState: InvoiceActionState, formData
     entityId: invoice.id,
     after: { amount: parsed.data.amount, method: parsed.data.method, newStatus },
   });
+
+  const load = await db.load.findUnique({ where: { id: invoice.loadId }, select: { loadNumber: true, createdBy: true } });
+  if (load) {
+    await notifyUser(load.createdBy, {
+      type: "payment_received",
+      title: `Payment received on ${invoice.invoiceNumber}`,
+      body: `$${parsed.data.amount.toLocaleString()} for ${load.loadNumber}.`,
+      link: `/ops/loads/${invoice.loadId}`,
+    });
+  }
 
   revalidatePath(`/shipper/shipments/${invoice.loadId}`);
   revalidatePath("/shipper/invoices");
