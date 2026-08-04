@@ -3,6 +3,12 @@ import { AuthSplitLayout } from "@/components/shared/auth-split-layout";
 import { MARKETING_IMAGES } from "@/lib/marketing/images";
 import { CarrierSignupForm } from "./signup-form";
 
+// Reads the live equipment-type list from the database, which must never be
+// baked into the static build (build machines have no DB access, and a
+// statically-frozen list would go stale the moment ops adds/retires an
+// equipment type without a full redeploy).
+export const dynamic = "force-dynamic";
+
 export default async function CarrierSignupPage() {
   const equipmentTypes = await db.equipmentType.findMany({
     where: { active: true },
