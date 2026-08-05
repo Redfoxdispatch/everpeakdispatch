@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createProfileForUser } from "@/lib/auth/create-profile";
 import { writeAuditLog } from "@/lib/audit/log";
 import { shipperSignupSchema } from "@/lib/validations/marketing";
+import { checkRateLimit, clientIp, rateLimitErrorMessage } from "@/lib/rate-limit/check";
 
 export type ShipperSignupState = { error?: string };
 
@@ -13,6 +14,9 @@ export async function signupShipper(
   _prevState: ShipperSignupState,
   formData: FormData,
 ): Promise<ShipperSignupState> {
+  const { allowed, retryAfterSeconds } = await checkRateLimit(`signup:${await clientIp()}`, { max: 5, windowSeconds: 600 });
+  if (!allowed) return { error: rateLimitErrorMessage(retryAfterSeconds) };
+
   const parsed = shipperSignupSchema.safeParse({
     companyName: formData.get("companyName"),
     industry: formData.get("industry"),

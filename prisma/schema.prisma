@@ -375,6 +375,7 @@ model Quote {
 
   @@index([loadId, status])
   @@index([validUntil])
+  @@index([createdAt])
   @@map("quotes")
 }
 
@@ -681,4 +682,20 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+/// Fixed-window rate limiting for public-facing forms (signup, contact,
+/// login) — see context/06-development-roadmap.md Phase 9. Postgres-backed
+/// rather than Redis: these are low-volume forms, not a hot path, and this
+/// avoids a new external service/account. `key` encodes both the scope and
+/// identifier, e.g. "signup:ip:203.0.113.5". Rows are upserted atomically
+/// via a single raw SQL statement in lib/rate-limit/check.ts — this model
+/// exists so Prisma migrations manage the table; the app never reads/writes
+/// it through normal Prisma query methods.
+model RateLimitBucket {
+  key         String   @id
+  count       Int      @default(1)
+  windowStart DateTime @map("window_start") @db.Timestamptz(6)
+
+  @@map("rate_limit_buckets")
 }

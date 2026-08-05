@@ -11,6 +11,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Active Shipments", href: "/shipper/shipments" },
   { label: "Documents", href: "/shipper/documents" },
   { label: "Invoices", href: "/shipper/invoices" },
+  { label: "Reports", href: "/shipper/reports" },
   { label: "Profile", href: "/shipper/profile" },
 ];
 

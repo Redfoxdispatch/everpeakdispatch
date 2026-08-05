@@ -43,6 +43,8 @@ export const PERMISSIONS = [
   "tracking_events:create",
   "messages:send",
   "notifications:read:own",
+  "analytics:read:all",
+  "analytics:read:own",
 ] as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[number];
@@ -81,6 +83,7 @@ export const ROLE_PERMISSIONS: Record<SeedRoleName, PermissionKey[]> = {
     "tracking_events:create",
     "messages:send",
     "notifications:read:own",
+    "analytics:read:all",
   ],
   broker: [
     "companies:read:all",
@@ -100,6 +103,7 @@ export const ROLE_PERMISSIONS: Record<SeedRoleName, PermissionKey[]> = {
     "tracking_events:create",
     "messages:send",
     "notifications:read:own",
+    "analytics:read:all",
   ],
   shipper_user: [
     "companies:read:own",
@@ -113,6 +117,7 @@ export const ROLE_PERMISSIONS: Record<SeedRoleName, PermissionKey[]> = {
     "payments:record",
     "messages:send",
     "notifications:read:own",
+    "analytics:read:own",
   ],
   carrier_user: [
     "companies:read:own",
@@ -126,6 +131,7 @@ export const ROLE_PERMISSIONS: Record<SeedRoleName, PermissionKey[]> = {
     "tracking_events:create",
     "messages:send",
     "notifications:read:own",
+    "analytics:read:own",
   ],
   driver: [
     "loads:read:own",

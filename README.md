@@ -40,3 +40,7 @@ If Prisma commands fail with `Can't reach database server` / `P1001`, it's very 
 ## Docs
 
 Full product/architecture documentation (business workflow, RBAC, schema rationale, phased roadmap) lives in `context/` locally — it's git-ignored and not part of the shipped codebase.
+
+Operational runbooks are tracked in `docs/` (shipped with the repo, unlike `context/`):
+
+- [`docs/backup-restore-runbook.md`](docs/backup-restore-runbook.md) — current backup posture (Free tier has **no** automatic backups — read this before going live), manual backup routine, and the restore procedure.

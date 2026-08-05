@@ -3,6 +3,7 @@
 import { db } from "@/lib/db/client";
 import { writeAuditLog } from "@/lib/audit/log";
 import { contactSchema } from "@/lib/validations/marketing";
+import { checkRateLimit, clientIp, rateLimitErrorMessage } from "@/lib/rate-limit/check";
 
 export type ContactState = { error?: string; success?: boolean };
 
@@ -15,6 +16,9 @@ export async function submitContact(
   _prevState: ContactState,
   formData: FormData,
 ): Promise<ContactState> {
+  const { allowed, retryAfterSeconds } = await checkRateLimit(`contact:${await clientIp()}`, { max: 5, windowSeconds: 600 });
+  if (!allowed) return { error: rateLimitErrorMessage(retryAfterSeconds) };
+
   const parsed = contactSchema.safeParse({
     fullName: formData.get("fullName"),
     email: formData.get("email"),

@@ -5,10 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db/client";
 import { loginSchema } from "@/lib/validations/auth";
 import { homePathForRole, type RoleName } from "@/lib/auth/roles";
+import { checkRateLimit, clientIp, rateLimitErrorMessage } from "@/lib/rate-limit/check";
 
 export type LoginState = { error?: string };
 
 export async function login(_prevState: LoginState, formData: FormData): Promise<LoginState> {
+  const { allowed, retryAfterSeconds } = await checkRateLimit(`login:${await clientIp()}`, { max: 10, windowSeconds: 600 });
+  if (!allowed) return { error: rateLimitErrorMessage(retryAfterSeconds) };
+
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),

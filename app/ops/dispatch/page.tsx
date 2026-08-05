@@ -28,16 +28,26 @@ export default async function DispatchBoardPage() {
   if (!user) redirect("/login");
   if (!(await can(user, "loads:read:all"))) redirect("/ops/dashboard");
 
+  // Bounded like every other list view in this app (see app/ops/loads/page.tsx
+  // take: 100, app/ops/quotes/page.tsx take: 200) — an unbounded query here
+  // grows without limit as the brokerage operates over time; a board showing
+  // the 300 most-recently-active loads is what a broker actually scans, not
+  // every load ever dispatched. Confirmed via load testing at 2000+ loads:
+  // this was previously unbounded and returned 1800+ full rows with nested
+  // relations on every page load.
   const loads = await db.load.findMany({
     where: { deletedAt: null, status: { in: BOARD_COLUMNS.flatMap((c) => c.statuses) } },
     include: { shipperCompany: true, stops: { orderBy: { sequence: "asc" } } },
     orderBy: { updatedAt: "desc" },
+    take: 300,
   });
 
   return (
     <div>
       <h1 className="text-2xl font-semibold">Dispatch</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Every active load, grouped by where it is in the workflow.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {loads.length === 300 ? "The 300 most recently active loads, grouped by where they are in the workflow." : "Every active load, grouped by where it is in the workflow."}
+      </p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 overflow-x-auto sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {BOARD_COLUMNS.map((column) => {

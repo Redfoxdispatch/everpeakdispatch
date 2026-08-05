@@ -3,6 +3,7 @@ import { Truck } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { can } from "@/lib/permissions/can";
+import { getCarrierScorecards } from "@/lib/analytics/queries";
 import { DataTable, type DataTableColumn } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -31,11 +32,14 @@ export default async function OpsCarriersPage() {
   if (!user) redirect("/login");
   if (!(await can(user, "companies:read:all"))) redirect("/ops/dashboard");
 
-  const carriers = await db.company.findMany({
-    where: { type: "carrier" },
-    include: { carrierProfile: true, _count: { select: { carrierAssignments: true } } },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-  });
+  const [carriers, scorecards] = await Promise.all([
+    db.company.findMany({
+      where: { type: "carrier" },
+      include: { carrierProfile: true, _count: { select: { carrierAssignments: true } } },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    }),
+    getCarrierScorecards(),
+  ]);
 
   const columns: DataTableColumn<(typeof carriers)[number]>[] = [
     {
@@ -91,6 +95,24 @@ export default async function OpsCarriersPage() {
       header: "Loads",
       className: "text-right",
       render: (row) => row._count.carrierAssignments,
+    },
+    {
+      key: "onTimePct",
+      header: "On-time %",
+      className: "text-right",
+      render: (row) => {
+        const pct = scorecards.get(row.id)?.onTimePct;
+        return pct == null ? "—" : `${pct}%`;
+      },
+    },
+    {
+      key: "fallOffPct",
+      header: "Fall-off %",
+      className: "text-right",
+      render: (row) => {
+        const pct = scorecards.get(row.id)?.fallOffRatePct;
+        return pct == null ? "—" : `${pct}%`;
+      },
     },
     {
       key: "actions",

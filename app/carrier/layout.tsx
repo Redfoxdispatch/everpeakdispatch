@@ -12,6 +12,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Payments", href: "/carrier/payments" },
   { label: "Vehicles", href: "/carrier/vehicles" },
   { label: "Drivers", href: "/carrier/drivers" },
+  { label: "Reports", href: "/carrier/reports" },
 ];
 
 export default async function CarrierLayout({ children }: { children: React.ReactNode }) {
